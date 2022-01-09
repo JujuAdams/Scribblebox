@@ -8,7 +8,7 @@
 #macro CHATTERBOX_SHOW_REJECTED_OPTIONS         true
 #macro CHATTERBOX_DECLARE_ON_COMPILE            true //Whether to declare variables when Chatterbox script is compiled. Set to <false> for legacy (2.1 and earlier) behaviour
 
-#macro CHATTERBOX_DIRECTION_MODE                  1 //0 = Pass direction to function (see below), 1 = treat directions as expressions, 2 = treat directions as Python-esque function calls
+#macro CHATTERBOX_DIRECTION_MODE                  2 //0 = Pass direction to function (see below), 1 = treat directions as expressions, 2 = treat directions as Python-esque function calls
 #macro CHATTERBOX_DIRECTION_FUNCTION              undefined //The function to receive <<direction>> contents. This will only be called if CHATTERBOX_DIRECTION_MODE is 0
 
 #macro CHATTERBOX_ESCAPE_FILE_TAGS                true

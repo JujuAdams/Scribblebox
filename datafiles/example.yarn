@@ -14,7 +14,7 @@ Um... Bye then...
 title: Scribblebox
 ---
 Yknow, [rainbow]Scribblebox[/rainbow]!
-It's the combination of [#9090FF]Scribble[/c], a fast and powerful text renderer, and [#FFFF90]Chatterbox[/c], a narrative scripting tool.
+It's the combination of [$9090FF]Scribble[/c], a fast and powerful text renderer, and [$FFFF90]Chatterbox[/c], a narrative scripting tool.
 <<wait>>
 No?
 -> Never heard of them.
@@ -39,14 +39,14 @@ Let's goooooo!
 ===
 title: Tutorial
 ---
-[#9090FF]Scribble[/c] and [#FFFF90]Chatterbox[/c] are two different libraries that can be used separately or combined together.
+[$9090FF]Scribble[/c] and [$FFFF90]Chatterbox[/c] are two different libraries that can be used separately or combined together.
 -> What's Chatterbox?
-	[#FFFF90]Chatterbox[/c] handles what text to show to you and also allows the player to choose options. [#FFFF90]Chatterbox[/c] is based on a narrative design language called "Yarn" which has been used for lots of professional/commercial games.
+	[$FFFF90]Chatterbox[/c] handles what text to show to you and also allows the player to choose options. [$FFFF90]Chatterbox[/c] is based on a narrative design language called "Yarn" which has been used for lots of professional/commercial games.
 	<<wait>>
 	<<jump Tutorial>>
 -> What's Scribble?
-	[#9090FF]Scribble[/c] draws the text itself. It does [wave]animation[/wave] and [cycle,0,20,70,40]colours[/cycle] and lots of other things.
-	What [#9090FF]Scribble[/c] draws is dictated by what [#FFFF90]Chatterbox[/c] passes to it.
+	[$9090FF]Scribble[/c] draws the text itself. It does [wave]animation[/wave] and [cycle,0,20,70,40]colours[/cycle] and lots of other things.
+	What [$9090FF]Scribble[/c] draws is dictated by what [$FFFF90]Chatterbox[/c] passes to it.
 	<<wait>>
 	<<jump Tutorial>>
 -> Go on...
@@ -54,25 +54,25 @@ title: Tutorial
 ===
 title: TheBasicIdea
 ---
-The basic idea is that [#FFFF90]Chatterbox[/c] "drives" [#9090FF]Scribble[/c]. Whenever the player advances [#FFFF90]Chatterbox[/c] by selecting an option or continuing when [#FFFF90]Chatterbox[/c] is waiting, [#FFFF90]Chatterbox[/c] hands some text over to [#9090FF]Scribble[/c].
+The basic idea is that [$FFFF90]Chatterbox[/c] "drives" [$9090FF]Scribble[/c]. Whenever the player advances [$FFFF90]Chatterbox[/c] by selecting an option or continuing when [$FFFF90]Chatterbox[/c] is waiting, [$FFFF90]Chatterbox[/c] hands some text over to [$9090FF]Scribble[/c].
 -> Uhuh...
-We then use [#9090FF]Scribble[/c] to cache the text as "text elements". We do this so we can set up the autotyper to let the text elegantly fade in.
+We then use [$9090FF]Scribble[/c] to cache the text as "text elements". We do this so we can set up the autotyper to let the text elegantly fade in.
 All the text caching is done in [fnt_consolas28]refresh_text_elements()[/f].
 -> It sure is elegant.
 [wheel]Thanks![/wheel]
-Take a browse through the code. It's all commented and should be easy to follow. [#9090FF]Scribble[/c] and [#FFFF90]Chatterbox[/c] both have lots of documentation on GitHub so you can read up on each individual feature.
+Take a browse through the code. It's all commented and should be easy to follow. [$9090FF]Scribble[/c] and [$FFFF90]Chatterbox[/c] both have lots of documentation on GitHub so you can read up on each individual feature.
 -> Hold up, could you go over that again?
 	Sure, one sec...
 	<<jump TheBasicIdea>>
 -> Oooh I'd like to read about Scribble please.
 	<<url_open "https://github.com/JujuAdams/scribble">>
-	[#FFFF90]Chatterbox[/c] too?
+	[$FFFF90]Chatterbox[/c] too?
 	-> Yep.
             <<url_open "https://github.com/JujuAdams/chatterbox">>
 	-> Nah, already know that library.
 -> Hmm, not so familiar with Chatterbox... Could you point me in the right direction?
 	<<url_open "https://github.com/JujuAdams/chatterbox">>
-	[#FFFF90]Scribble[/c] too?
+	[$FFFF90]Scribble[/c] too?
 	-> Please.
 		<<url_open "https://github.com/JujuAdams/scribble">>
 	-> No thanks.

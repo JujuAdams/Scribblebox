@@ -1,10 +1,12 @@
 title: Start
 ---
-Hi, welcome to the [rainbow]Scribblebox[/rainbow] example! [slant](Scribble 6.0.11 + Chatterbox 0.5.1)[/slant]
+Hi, welcome to the [rainbow]Scribblebox[/rainbow] example! [slant](Scribble 8.0.1 + Chatterbox 2.2.1)[/slant]
 This project shows you how to set up the two libraries and how to get them working with each other.
 
-[[Scribblewhat?|Scribblebox]]
-[[Cool! Let's get started!|Tutorial]]
+-> Scribblewhat?
+    <<jump Scribblebox>>
+-> Cool! Let's get started!
+    <<jump Tutorial>>
 -> Oh uh... I accidentally opened this project...
 Um... Bye then...
 <<stop>>

@@ -1,8 +1,8 @@
-if (chatterbox_is_stopped(chatterbox))
+if (ChatterboxIsStopped(chatterbox))
 {
     //If we've stopped we should say so
     //In a real game you'd close the dialogue system and permit user interaction again
-    scribble_draw(10, 10, "(Chatterbox stopped)");
+    scribble("(Chatterbox stopped)").draw(10, 10);
 }
 else
 {
@@ -12,16 +12,17 @@ else
     repeat(array_length(text_elements))
     {
         //Get our text element and position
-        var _array = text_elements[_i];
-        var _x       = _array[0];
-        var _y       = _array[1];
-        var _element = _array[2];
+        var _struct = text_elements[_i];
+        var _x       = _struct.x;
+        var _y       = _struct.y;
+        var _element = _struct.element;
+        var _typist  = _struct.typist;
         
         //Draw the text element
-        scribble_draw(_x, _y, _element);
+        _element.draw(_x, _y, _typist);
         
         //Break out of the loop if this text element hasn't finished fading in
-        if (scribble_autotype_get(_element) < 1.0) break;
+        if (_typist.get_state() < 1.0) break;
         //Autotype will only happen when you actually draw the text element
         //This means if we don't want to fade text in we can just... not draw it
         

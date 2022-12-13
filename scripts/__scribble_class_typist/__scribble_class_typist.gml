@@ -7,6 +7,9 @@ function __scribble_class_typist() constructor
     __in         = undefined;
     __backwards  = false;
     
+    __skip = false;
+    __drawn_since_skip = false;
+    
     __sound_array                   = undefined;
     __sound_overlap                 = 0;
     __sound_pitch_min               = 1;
@@ -46,14 +49,15 @@ function __scribble_class_typist() constructor
         
         __last_tick_time = -infinity;
         
-        __window_index = 0;
-        __window_array = array_create(2*__SCRIBBLE_WINDOW_COUNT, -__smoothness); __window_array[@ 0] = 0;
-        if (__last_element != undefined) __skip = false;
-        __paused       = false;
-        __delay_paused = false;
-        __delay_end    = -1;
-        __inline_speed = 1;
-        __event_stack  = [];
+        __window_index     = 0;
+        __window_array     = array_create(2*__SCRIBBLE_WINDOW_COUNT, -__smoothness); __window_array[@ 0] = 0;
+        __paused           = false;
+        __delay_paused     = false;
+        __delay_end        = -1;
+        __inline_speed     = 1;
+        __event_stack      = [];
+        __skip             = false;
+        __drawn_since_skip = false;
         
         return self;
     }
@@ -96,6 +100,7 @@ function __scribble_class_typist() constructor
     static skip = function(_state = true)
     {
         __skip = _state;
+        __drawn_since_skip = false;
         
         return self;
     }
@@ -285,18 +290,20 @@ function __scribble_class_typist() constructor
         if ((__last_element == undefined) || (__last_page == undefined) || (__last_character == undefined)) return 0.0;
         if (__in == undefined) return 1.0;
         
+        if (!weak_ref_alive(__last_element)) return 2.0; //If there's no element then report that the element is totally faded out
+        
         var _model = __last_element.ref.__get_model(true);
         if (!is_struct(_model)) return 2.0; //If there's no model then report that the element is totally faded out
         
         var _pages_array = _model.__get_page_array();
         if (array_length(_pages_array) <= __last_page) return 1.0;
         var _page_data = _pages_array[__last_page];
-        var _min = 0;
+        
         var _max = _page_data.__character_count;
+        if (_max <= 0) return 1.0;
         
-        if (_max <= _min) return 1.0;
+        var _t = clamp((__window_array[__window_index] + max(0, __window_array[__window_index+1] + __smoothness - _max)) / (_max + __smoothness), 0, 1);
         
-        var _t = clamp((get_position() - _min) / (_max - _min), 0, 1);
         if (__in)
         {
             if (__delay_paused || (array_length(__event_stack) > 0))
@@ -344,7 +351,9 @@ function __scribble_class_typist() constructor
     
     static __associate = function(_text_element)
     {
-        if ((__last_element == undefined) || (__last_element.ref != _text_element)) //We didn't have an element defined, or we swapped to a different element
+        var _carry_skip = __skip && ((__last_element == undefined) || !__drawn_since_skip);
+        
+        if ((__last_element == undefined) || !weak_ref_alive(__last_element) || (__last_element.ref != _text_element)) //We didn't have an element defined, or we swapped to a different element
         {
             reset();
             __last_element = weak_ref_create(_text_element);
@@ -361,6 +370,12 @@ function __scribble_class_typist() constructor
         }
         
         __last_page = __last_element.ref.__page;
+        
+        if (_carry_skip)
+        {
+            __skip = true;
+            __drawn_since_skip = false;
+        }
         
         return self;
     }
@@ -424,12 +439,24 @@ function __scribble_class_typist() constructor
                 break;
                 
                 //Native audio playback feature
-                case __SCRIBBLE_AUDIO_COMMAND_TAG: //TODO - Rename and add warning when adding a conflicting custom event
+                case __SCRIBBLE_AUDIO_COMMAND_TAG: //TODO - Add warning when adding a conflicting custom event
                     if (array_length(_event_data) >= 1)
                     {
                         var _asset = _event_data[0];
                         if (is_string(_asset)) _asset = asset_get_index(_asset);
                         audio_play_sound(_asset, 1, false);
+                    }
+                break;
+                
+                case __SCRIBBLE_TYPIST_SOUND_COMMAND_TAG: //TODO - Add warning when adding a conflicting custom event
+                    sound(asset_get_index(_event_data[1]), real(_event_data[2]), real(_event_data[3]), real(_event_data[4]));
+                break;
+                
+                case __SCRIBBLE_TYPIST_SOUND_PER_CHAR_COMMAND_TAG: //TODO - Add warning when adding a conflicting custom event
+                    switch(array_length(_event_data))
+                    {
+                        case 4: sound_per_char(asset_get_index(_event_data[1]), real(_event_data[2]), real(_event_data[3])); break;
+                        case 5: sound_per_char(asset_get_index(_event_data[1]), real(_event_data[2]), real(_event_data[3]), _event_data[4]); break;
                     }
                 break;
                 
@@ -519,6 +546,8 @@ function __scribble_class_typist() constructor
         //Associate the typist with the target element so that we're pulling data from the correct place
         //This saves the user from doing it themselves
         __associate(_target_element);
+        
+        if (__skip) __drawn_since_skip = true;
         
         //Don't tick if it's been less than a frame since we were last updated
         if (current_time - __last_tick_time < __SCRIBBLE_EXPECTED_FRAME_TIME) return undefined;
@@ -618,13 +647,13 @@ function __scribble_class_typist() constructor
                         //Add a per-character delay if required
                         if (SCRIBBLE_ALLOW_GLYPH_DATA_GETTER && !__ignore_delay && __character_delay && (__last_character > 0))
                         {
-                            var _glyph_ord = _page_data.__glyph_grid[# __last_character-1, __SCRIBBLE_GLYPH_LAYOUT.UNICODE];
+                            var _glyph_ord = _page_data.__glyph_grid[# __last_character-1, __SCRIBBLE_GLYPH_LAYOUT.__UNICODE];
                             var _delay = __character_delay_dict[$ _glyph_ord];
                             _delay = (_delay == undefined)? 0 : _delay;
                             
                             if (__last_character > 1)
                             {
-                                _glyph_ord = (_glyph_ord << 32) | _page_data.__glyph_grid[# __last_character-2, __SCRIBBLE_GLYPH_LAYOUT.UNICODE];
+                                _glyph_ord = (_glyph_ord << 32) | _page_data.__glyph_grid[# __last_character-2, __SCRIBBLE_GLYPH_LAYOUT.__UNICODE];
                                 var _double_char_delay = __character_delay_dict[$ _glyph_ord];
                                 _double_char_delay = (_double_char_delay == undefined)? 0 : _double_char_delay;
                                 
@@ -658,7 +687,10 @@ function __scribble_class_typist() constructor
                 }
                 
                 //Only play sound once per frame if we're going reaaaally fast
-                if (_play_sound) __play_sound(_head_pos, SCRIBBLE_ALLOW_GLYPH_DATA_GETTER? (_page_data.__glyph_grid[# _head_pos-1, __SCRIBBLE_GLYPH_LAYOUT.UNICODE]) : 0);
+                if (_play_sound && (__last_character <= _page_character_count))
+                {
+                    __play_sound(_head_pos, SCRIBBLE_ALLOW_GLYPH_DATA_GETTER? (_page_data.__glyph_grid[# _head_pos-1, __SCRIBBLE_GLYPH_LAYOUT.__UNICODE]) : 0);
+                }
                 
                 //Set the typewriter head
                 __window_array[@ __window_index] = _head_pos;

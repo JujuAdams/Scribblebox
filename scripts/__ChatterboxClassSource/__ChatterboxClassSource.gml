@@ -1,7 +1,8 @@
 /// @param filename
 /// @param string
+/// @param compile
 
-function __ChatterboxClassSource(_filename, _string) constructor
+function __ChatterboxClassSource(_filename, _buffer, _compile) constructor
 {
     filename = _filename;
     name     = _filename;
@@ -9,11 +10,11 @@ function __ChatterboxClassSource(_filename, _string) constructor
     nodes    = [];
     loaded   = false; //We set this to <true> at the bottom of the constructor
     
-    __ChatterboxTrace("Parsing \"", filename, "\" as a source file named \"", name, "\"");
+    __ChatterboxTrace("Parsing \"", filename, "\" as a source file with alias \"", name, "\"");
     
     try
     {
-        var _file_struct = __ChatterboxParseYarn(_string);
+        var _file_struct = __ChatterboxParseYarn(_buffer);
     }
     catch(_error)
     {
@@ -38,12 +39,14 @@ function __ChatterboxClassSource(_filename, _string) constructor
         }
         else
         {
-            var _node = new __ChatterboxClassNode(filename, _node_metadata, _node_temp_struct.body);
+            var _node = new __ChatterboxClassNode(filename, _node_metadata, _compile, _buffer, _node_temp_struct.buffer_start, _node_temp_struct.buffer_end);
             array_push(nodes, _node);
         }
         
         _n++;
     }
+    
+    loaded = true;
     
     
     
@@ -67,7 +70,7 @@ function __ChatterboxClassSource(_filename, _string) constructor
     
     static NodeCount = function()
     {
-        return array_length(global.chatterboxFiles[? _sourceName].nodes);
+        return array_length(nodes);
     }
     
     static GetTags = function()
@@ -75,25 +78,44 @@ function __ChatterboxClassSource(_filename, _string) constructor
         return tags;
     }
     
+    static __BuildLocalisation = function(_file_order, _file_dict, _buffer_batch)
+    {
+        array_push(_file_order, filename);
+        
+        var _node_order = [];
+        var _node_dict = {};
+        
+        _file_dict[$ filename] = {
+            order: _node_order,
+            nodes: _node_dict,
+        }
+        
+        var _i = 0;
+        repeat(array_length(nodes))
+        {
+            nodes[_i].__BuildLocalisation(_node_order, _node_dict, _buffer_batch);
+            ++_i;
+        }
+    }
+    
     static toString = function()
     {
         return "File " + string(filename) + " " + string(nodes);
     }
-    
-    
-    
-    loaded = true;
 }
 
 /// @param string
-function __ChatterboxParseYarn(_input_string)
+function __ChatterboxParseYarn(_buffer)
 {
     var _node_array  = [];
     var _file_tags   = [];
-    var _file_struct = { tags : _file_tags, nodes : _node_array };
+    var _file_struct = {
+        tags:  _file_tags,
+        nodes: _node_array,
+    };
     
-    var _buffer = buffer_create(string_byte_length(_input_string)+1, buffer_fixed, 1);
-    buffer_write(_buffer, buffer_string, _input_string);
+    //Ensure we have a null at the end of the buffer
+    buffer_resize(_buffer, buffer_get_size(_buffer)+1);
     buffer_seek(_buffer, buffer_seek_start, 0);
     
     if (buffer_get_size(_buffer) >= 4)
@@ -130,7 +152,7 @@ function __ChatterboxParseYarn(_input_string)
                 var _string = buffer_read(_buffer, buffer_string);
                 buffer_poke(_buffer, buffer_tell(_buffer) - 1, buffer_u8, _byte);
                 
-                var _string_trimmed = __ChatterboxRemoveWhitespace(_string, all);
+                var _string_trimmed = __ChatterboxCompilerRemoveWhitespace(_string, all);
                 
                 if (_line_is_file_tag)
                 {
@@ -162,17 +184,23 @@ function __ChatterboxParseYarn(_input_string)
                         }
                         else
                         {
-                            var _old_tell = buffer_tell(_buffer);
-                            buffer_poke(_buffer, _string_start, buffer_u8, 0x00);
-                            buffer_seek(_buffer, buffer_seek_start, _body_start);
-                            var _string = buffer_read(_buffer, buffer_string);
-                            buffer_poke(_buffer, _string_start, buffer_u8, _byte);
-                            buffer_seek(_buffer, buffer_seek_start, _old_tell);
+                            if (__CHATTERBOX_DEBUG_LOADER)
+                            {
+                                var _old_tell = buffer_tell(_buffer);
+                                buffer_poke(_buffer, _string_start, buffer_u8, 0x00);
+                                buffer_seek(_buffer, buffer_seek_start, _body_start);
+                                var _string = buffer_read(_buffer, buffer_string);
+                                buffer_poke(_buffer, _string_start, buffer_u8, _byte);
+                                buffer_seek(_buffer, buffer_seek_start, _old_tell);
+                                
+                                __ChatterboxTrace("Creating node \"", __ChatterboxStringLimit(_string, 100), "\"    ", _node_metadata);
+                            }
                             
-                            if (__CHATTERBOX_DEBUG_LOADER) __ChatterboxTrace("Creating node \"", __ChatterboxStringLimit(_string, 100), "\"    ", _node_metadata);
-                            
-                            var _node_struct = { metadata : _node_metadata, body : _string };
-                            array_push(_node_array, _node_struct);
+                            array_push(_node_array, {
+                                metadata:     _node_metadata,
+                                buffer_start: _body_start,
+                                buffer_end:   _string_start-1,
+                            });
                             
                             _in_body = false;
                             _node_metadata = {};
@@ -190,8 +218,8 @@ function __ChatterboxParseYarn(_input_string)
                         {
                             var _key   = string_copy(_string_trimmed, 1, _colon_pos - 1);
                             var _value = string_copy(_string_trimmed, _colon_pos + 1, string_length(_string_trimmed) - _colon_pos);
-                            _key   = __ChatterboxRemoveWhitespace(_key,   all);
-                            _value = __ChatterboxRemoveWhitespace(_value, all);
+                            _key   = __ChatterboxCompilerRemoveWhitespace(_key,   all);
+                            _value = __ChatterboxCompilerRemoveWhitespace(_value, all);
                             
                             if (CHATTERBOX_ESCAPE_NODE_TAGS)
                             {
@@ -238,22 +266,26 @@ function __ChatterboxParseYarn(_input_string)
     {
         __ChatterboxTrace("Warning! File ended without a final body terminator (===)");
         
-        var _old_tell = buffer_tell(_buffer);
-        buffer_poke(_buffer, _string_start, buffer_u8, 0x00);
-        buffer_seek(_buffer, buffer_seek_start, _body_start);
-        var _string = buffer_read(_buffer, buffer_string);
-        buffer_poke(_buffer, _string_start, buffer_u8, _byte);
-        buffer_seek(_buffer, buffer_seek_start, _old_tell);
+        if (__CHATTERBOX_DEBUG_LOADER)
+        {
+            var _old_tell = buffer_tell(_buffer);
+            buffer_poke(_buffer, _string_start, buffer_u8, 0x00);
+            buffer_seek(_buffer, buffer_seek_start, _body_start);
+            var _string = buffer_read(_buffer, buffer_string);
+            buffer_poke(_buffer, _string_start, buffer_u8, _byte);
+            buffer_seek(_buffer, buffer_seek_start, _old_tell);
+            
+            __ChatterboxTrace("Creating node \"", __ChatterboxStringLimit(_string, 100), "\"    ", _node_metadata);
+        }
         
-        if (__CHATTERBOX_DEBUG_LOADER) __ChatterboxTrace("Creating node \"", __ChatterboxStringLimit(_string, 100), "\"    ", _node_metadata);
-        
-        var _node_struct = { metadata : _node_metadata, body : _string };
-        array_push(_node_array, _node_struct);
+        array_push(_node_array, {
+            metadata:     _node_metadata,
+            buffer_start: _body_start,
+            buffer_end:   _string_start-1,
+        });
         
         _node_metadata = {};
     }
-    
-    buffer_delete(_buffer);
     
     if (variable_struct_names_count(_node_metadata) > 0)
     {

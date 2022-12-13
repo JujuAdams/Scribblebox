@@ -1,12 +1,11 @@
 {
+  "resourceType": "GMScript",
+  "resourceVersion": "1.0",
+  "name": "ChatterboxGetContentMetadata",
   "isDnD": false,
   "isCompatibility": false,
   "parent": {
-    "name": "Getters",
-    "path": "folders/Chatterbox/Getters.yy",
+    "name": "Content Getters",
+    "path": "folders/Chatterbox/Content Getters.yy",
   },
-  "resourceVersion": "1.0",
-  "name": "ChatterboxGetContentMetadata",
-  "tags": [],
-  "resourceType": "GMScript",
 }

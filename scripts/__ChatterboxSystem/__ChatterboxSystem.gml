@@ -1,17 +1,26 @@
 #region Internal Macro Definitions
 
-#macro __CHATTERBOX_VERSION  "2.2.1"
-#macro __CHATTERBOX_DATE     "2022-01-04"
+#macro __CHATTERBOX_VERSION  "2.10.2"
+#macro __CHATTERBOX_DATE     "2022-11-21"
 
-#macro __CHATTERBOX_DEBUG_INIT      false
-#macro __CHATTERBOX_DEBUG_LOADER    false
-#macro __CHATTERBOX_DEBUG_COMPILER  false
-#macro __CHATTERBOX_DEBUG_VM        false
+#macro CHATTERBOX_VARIABLES_MAP   global.__chatterboxVariablesMap
+#macro CHATTERBOX_VARIABLES_LIST  global.__chatterboxVariablesList
+#macro CHATTERBOX_CURRENT         global.__chatterboxCurrent
+
+#macro __CHATTERBOX_DEBUG_INIT      true
+#macro __CHATTERBOX_DEBUG_LOADER    true
+#macro __CHATTERBOX_DEBUG_SPLITTER  true
+#macro __CHATTERBOX_DEBUG_COMPILER  true
+#macro __CHATTERBOX_DEBUG_VM        true
 
 //These macros control which delimiters to use for <<actions>>
 //You probably don't want to change these
 #macro __CHATTERBOX_ACTION_OPEN_DELIMITER   "<"
 #macro __CHATTERBOX_ACTION_CLOSE_DELIMITER  ">"
+
+#macro __CHATTERBOX_LINE_HASH_PREFIX         "line:"
+#macro __CHATTERBOX_LINE_HASH_PREFIX_LENGTH  5
+#macro __CHATTERBOX_TEXT_HASH_LENGTH         6
 
 #macro __CHATTERBOX_ON_MOBILE  ((os_type == os_ios) || (os_type == os_android) || (os_type == os_tvos))
 #macro __CHATTERBOX_ON_WEB     (os_browser != browser_not_a_browser)
@@ -49,58 +58,91 @@ if (!__CHATTERBOX_ON_WEB)
     }
 }
 
-//Verify CHATTERBOX_DIRECTION_FUNCTION has been set to a valid global function
+//Verify CHATTERBOX_ACTION_FUNCTION has been set to a valid global function
 try
 {
-    if (script_exists(CHATTERBOX_DIRECTION_FUNCTION) || is_method(CHATTERBOX_DIRECTION_FUNCTION))
+    if (script_exists(CHATTERBOX_ACTION_FUNCTION) || is_method(CHATTERBOX_ACTION_FUNCTION))
     {
-        if (__CHATTERBOX_DEBUG_INIT) __ChatterboxTrace("CHATTERBOX_DIRECTION_FUNCTION is valid");
+        if (__CHATTERBOX_DEBUG_INIT) __ChatterboxTrace("CHATTERBOX_ACTION_FUNCTION is valid");
     }
 }
 catch(_error)
 {
-    if (CHATTERBOX_DIRECTION_MODE == 0)
+    if (CHATTERBOX_ACTION_MODE == 0)
     {
-        __ChatterboxError("CHATTERBOX_DIRECTION_FUNCTION is not a valid global function\n\n(This is only a requirement if CHATTERBOX_DIRECTION_MODE == 0)");
+        __ChatterboxError("CHATTERBOX_ACTION_FUNCTION is not a valid global function\n\n(This is only a requirement if CHATTERBOX_ACTION_MODE == 0)");
     }
     else
     {
-        if (__CHATTERBOX_DEBUG_INIT) __ChatterboxTrace("CHATTERBOX_DIRECTION_FUNCTION is invalid, but CHATTERBOX_DIRECTION_MODE = ", CHATTERBOX_DIRECTION_MODE);
+        if (__CHATTERBOX_DEBUG_INIT) __ChatterboxTrace("CHATTERBOX_ACTION_FUNCTION is invalid, but CHATTERBOX_ACTION_MODE = ", CHATTERBOX_ACTION_MODE);
     }
 }
 
 //Declare global variables
 global.__chatterboxDirectory            = _chatterbox_directory;
-CHATTERBOX_VARIABLES_MAP                = ds_map_create();
+
+global.__chatterboxVariablesMap         = ds_map_create();
+global.__chatterboxVariablesList        = ds_list_create();
+global.__chatterboxConstantsMap         = ds_map_create();
+global.__chatterboxConstantsList        = ds_list_create();
 global.__chatterboxDefaultVariablesMap  = ds_map_create();
-CHATTERBOX_VARIABLES_LIST               = ds_list_create();
+global.__chatterboxDeclaredVariablesMap = ds_map_create();
+
 global.chatterboxFiles                  = ds_map_create();
 global.__chatterboxDefaultFile          = "";
 global.__chatterboxIndentSize           = 0;
 global.__chatterboxFindReplaceOldString = ds_list_create();
 global.__chatterboxFindReplaceNewString = ds_list_create();
+global.__chatterboxVMInstanceStack      = [];
+global.__chatterboxVMWait               = false;
+global.__chatterboxVMForceWait          = false;
+global.__chatterboxCurrent              = undefined;
+global.__chatterboxLocalisationMap      = ds_map_create();
 if (!variable_global_exists("__chatterbox_functions")) global.__chatterboxFunctions = ds_map_create();
 
 //Big ol' list of operators. Operators at the top at processed first
 //Not included here are negative signs, negation (! / NOT), and parentheses - these are handled separately
 global.__chatterboxOpList = ds_list_create();
-ds_list_add(global.__chatterboxOpList, "+" );
-ds_list_add(global.__chatterboxOpList, "-" );
-ds_list_add(global.__chatterboxOpList, "*" );
-ds_list_add(global.__chatterboxOpList, "/" );
-ds_list_add(global.__chatterboxOpList, "==");
-ds_list_add(global.__chatterboxOpList, "!=");
-ds_list_add(global.__chatterboxOpList, ">" );
-ds_list_add(global.__chatterboxOpList, "<" );
-ds_list_add(global.__chatterboxOpList, ">=");
-ds_list_add(global.__chatterboxOpList, "<=");
-ds_list_add(global.__chatterboxOpList, "||");
-ds_list_add(global.__chatterboxOpList, "&&");
-ds_list_add(global.__chatterboxOpList, "+=");
-ds_list_add(global.__chatterboxOpList, "-=");
-ds_list_add(global.__chatterboxOpList, "*=");
-ds_list_add(global.__chatterboxOpList, "/=");
-ds_list_add(global.__chatterboxOpList, "=" );
+if (CHATTERBOX_LEGACY_WEIRD_OPERATOR_PRECEDENCE)
+{
+    ds_list_add(global.__chatterboxOpList, "+" );
+    ds_list_add(global.__chatterboxOpList, "-" );
+    ds_list_add(global.__chatterboxOpList, "*" );
+    ds_list_add(global.__chatterboxOpList, "/" );
+    ds_list_add(global.__chatterboxOpList, "==");
+    ds_list_add(global.__chatterboxOpList, "!=");
+    ds_list_add(global.__chatterboxOpList, ">" );
+    ds_list_add(global.__chatterboxOpList, "<" );
+    ds_list_add(global.__chatterboxOpList, ">=");
+    ds_list_add(global.__chatterboxOpList, "<=");
+    ds_list_add(global.__chatterboxOpList, "||");
+    ds_list_add(global.__chatterboxOpList, "&&");
+    ds_list_add(global.__chatterboxOpList, "+=");
+    ds_list_add(global.__chatterboxOpList, "-=");
+    ds_list_add(global.__chatterboxOpList, "*=");
+    ds_list_add(global.__chatterboxOpList, "/=");
+    ds_list_add(global.__chatterboxOpList, "=" );
+}
+else
+{
+    ds_list_add(global.__chatterboxOpList, "*" );
+    ds_list_add(global.__chatterboxOpList, "/" );
+    ds_list_add(global.__chatterboxOpList, "-" );
+    ds_list_add(global.__chatterboxOpList, "+" );
+    ds_list_add(global.__chatterboxOpList, ">" );
+    ds_list_add(global.__chatterboxOpList, "<" );
+    ds_list_add(global.__chatterboxOpList, ">=");
+    ds_list_add(global.__chatterboxOpList, "<=");
+    ds_list_add(global.__chatterboxOpList, "==");
+    ds_list_add(global.__chatterboxOpList, "!=");
+    ds_list_add(global.__chatterboxOpList, "&&");
+    ds_list_add(global.__chatterboxOpList, "||");
+    ds_list_add(global.__chatterboxOpList, "+=");
+    ds_list_add(global.__chatterboxOpList, "-=");
+    ds_list_add(global.__chatterboxOpList, "*=");
+    ds_list_add(global.__chatterboxOpList, "/=");
+    ds_list_add(global.__chatterboxOpList, "=" );
+}
 
 #endregion
 
@@ -160,14 +202,22 @@ function __ChatterboxError()
         ++_i;
     }
     
-    show_error("Chatterbox:\n" + _string + "\n ", false);
+    if (os_browser != browser_not_a_browser)
+    {
+        _string += "\n \n" + string(debug_get_callstack());
+        throw ("Chatterbox " + __CHATTERBOX_VERSION + ":\n" + _string);
+    }
+    else
+    {
+        show_error("Chatterbox " + __CHATTERBOX_VERSION + ":\n" + _string + "\n ", false);
+    }
     
     return _string;
 }
 
 /// @param string
 /// @param leading
-function __ChatterboxRemoveWhitespace(_string, _leading)
+function __ChatterboxCompilerRemoveWhitespace(_string, _leading)
 {
     global.__chatterboxIndentSize = 0;
     
@@ -272,6 +322,7 @@ function __ChatterboxReadableValue(_value)
 
 function __ChatterboxVerifyDatatypes(_a, _b)
 {
+    if ((_a == undefined) || (_b == undefined)) return true;
     if (is_numeric(_a) && is_numeric(_b)) return true;
     if (is_string( _a) && is_string( _b)) return true;
     if (is_bool(   _a) && is_bool(   _b)) return true;
@@ -286,11 +337,12 @@ function __ChatterboxUnescapeString(_in_string)
     _out_string = string_replace_all(_out_string, "\\n", "\n");
     _out_string = string_replace_all(_out_string, "\\r", "\r");
     _out_string = string_replace_all(_out_string, "\\t", "\t");
-    _out_string = string_replace_all(_out_string, "\\\\", "\\");
     _out_string = string_replace_all(_out_string, "\\<", "<");
     _out_string = string_replace_all(_out_string, "\\>", ">");
     _out_string = string_replace_all(_out_string, "\\{", "{");
     _out_string = string_replace_all(_out_string, "\\}", "}");
+    _out_string = string_replace_all(_out_string, "\\#", "#");
+    _out_string = string_replace_all(_out_string, "\\\\", "\\");
     return _out_string;
 }
 
@@ -304,6 +356,35 @@ function __ChatterboxStringLimit(_string, _max_length)
     if (string_length(_string) <= 20) return _string;
     
     return string_copy(_string, 1, _max_length-3) + "...";
+}
+
+function __ChatterboxStripOuterWhitespace(_string)
+{
+    return __ChatterboxStripLeadingWhitespace(__ChatterboxStripTrailingWhitespace(_string));
+}
+
+function __ChatterboxStripLeadingWhitespace(_string)
+{
+    var _i = 0;
+    repeat(string_length(_string))
+    {
+        if (ord(string_char_at(_string, _i+1)) > 32) break;
+        ++_i;
+    }
+    
+    return string_delete(_string, 1, _i);
+}
+
+function __ChatterboxStripTrailingWhitespace(_string)
+{
+    var _i = string_length(_string);
+    repeat(_i)
+    {
+        if (ord(string_char_at(_string, _i)) > 32) break;
+        --_i;
+    }
+    
+    return string_copy(_string, 1, _i);
 }
 
 #endregion

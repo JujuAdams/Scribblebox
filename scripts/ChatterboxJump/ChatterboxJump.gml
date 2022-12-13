@@ -1,4 +1,4 @@
-/// Jumps to a specific node in a source file
+/// Hops to a specific node in a source file. You can hop back with with <<hopback>>
 ///
 /// @param chatterbox
 /// @param nodeTitle

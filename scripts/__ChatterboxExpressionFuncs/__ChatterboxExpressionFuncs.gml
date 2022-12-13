@@ -38,7 +38,7 @@ function __ChatterboxParseExpression(_string, _alt_direction_syntax)
             case __CHATTERBOX_TOKEN.IDENTIFIER: //Identifier (variable/function)
                 #region
                 
-                if (_byte == ord(")"))
+                if ((_byte == ord(",")) || (_byte == ord(")")))
                 {
                     _next_state = __CHATTERBOX_TOKEN.SYMBOL;
                 }
@@ -110,7 +110,7 @@ function __ChatterboxParseExpression(_string, _alt_direction_syntax)
                         }
                         else
                         {
-                            __ChatterboxError("Token (", _read, ") is invalid:\n- Variables must be prefixed with a $ sign\n- Strings must be delimited with \" quote marks");
+                            __ChatterboxError("Token (", _read, ") is invalid:\n- Variables and constants must be prefixed with a $ sign\n- Strings must be delimited with \" quote marks\nIf this token is a function call, please check CHATTERBOX_ACTION_MODE is set correctly");
                         }
                     }
                     
@@ -468,7 +468,7 @@ function __ChatterboxCompileExpression(_source_array)
             if (_token.op == "-")
             {
                 //If this token was preceded by a symbol (or nothing) then it's a negative sign
-                if ((_t == 0) || (__chatterboxStringIsSymbol(_source_array[_t-1], true)))
+                if ((_t == 0) || (__chatterboxTokenIsSymbol(_source_array[_t-1], true)))
                 {
                     _token.op = "neg";
                     _token.a = _source_array[_t+1];
@@ -518,30 +518,34 @@ function __ChatterboxCompileExpression(_source_array)
 
 /// @param string
 /// @param ignoreCloseParentheses
-function __chatterboxStringIsSymbol(_string, _ignore_close_paren)
+function __chatterboxTokenIsSymbol(_token, _ignore_close_paren)
 {
-    if ((_string == "(" )
-    || ((_string == ")" ) && !_ignore_close_paren)
-    ||  (_string == "!" )
-    ||  (_string == "/=")
-    ||  (_string == "/" )
-    ||  (_string == "*=")
-    ||  (_string == "*" )
-    ||  (_string == "+" )
-    ||  (_string == "+=")
-    ||  (_string == "-" )
-    ||  (_string == "-=")
-    ||  (_string == "||")
-    ||  (_string == "&&")
-    ||  (_string == ">=")
-    ||  (_string == "<=")
-    ||  (_string == ">" )
-    ||  (_string == "<" )
-    ||  (_string == "!=")
-    ||  (_string == "==")
-    ||  (_string == "=" ))
+    if (is_struct(_token))
     {
-        return true;
+        var _string = _token.op;
+        if ((_string == "(" )
+        || ((_string == ")" ) && !_ignore_close_paren)
+        ||  (_string == "!" )
+        ||  (_string == "/=")
+        ||  (_string == "/" )
+        ||  (_string == "*=")
+        ||  (_string == "*" )
+        ||  (_string == "+" )
+        ||  (_string == "+=")
+        ||  (_string == "-" )
+        ||  (_string == "-=")
+        ||  (_string == "||")
+        ||  (_string == "&&")
+        ||  (_string == ">=")
+        ||  (_string == "<=")
+        ||  (_string == ">" )
+        ||  (_string == "<" )
+        ||  (_string == "!=")
+        ||  (_string == "==")
+        ||  (_string == "=" ))
+        {
+            return true;
+        }
     }
     
     return false;

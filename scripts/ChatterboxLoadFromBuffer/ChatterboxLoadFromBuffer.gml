@@ -2,7 +2,7 @@
 ///
 /// To find out more about Chatterbox's scripting language, "Yarn", please read the __chatterbox_syntax()
 ///
-/// @param aliasName  Alias to use for this buffer
+/// @param aliasName  Alias to use for this buffer (effectively a fake filename)
 /// @param buffer     Buffer to read
 
 function ChatterboxLoadFromBuffer(_filename, _buffer)
@@ -23,14 +23,8 @@ function ChatterboxLoadFromBuffer(_filename, _buffer)
     //Set our default file if we don't already have one
     if (global.__chatterboxDefaultFile == "") global.__chatterboxDefaultFile = _filename;
     
-    //Read a string from the buffer
-    var _old_tell = buffer_tell(_buffer);
-    buffer_seek(_buffer, buffer_seek_start, 0);
-    var _string = buffer_read(_buffer, buffer_string);
-    buffer_seek(_buffer, buffer_seek_start, _old_tell);
-    
     //Create a struct that represents this source
-    var _source = new __ChatterboxClassSource(_filename, _string);
+    var _source = new __ChatterboxClassSource(_filename, _buffer, true);
     
     //If we successfully decoded a buffer add it to our collection of chatterboxes
     if ((instanceof(_source) == "__ChatterboxClassSource") && _source.loaded)

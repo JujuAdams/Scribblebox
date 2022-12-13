@@ -7,11 +7,11 @@
 #macro CHATTERBOX_VARIABLES_LIST  global.__chatterboxVariablesList
 #macro CHATTERBOX_CURRENT         global.__chatterboxCurrent
 
-#macro __CHATTERBOX_DEBUG_INIT      true
-#macro __CHATTERBOX_DEBUG_LOADER    true
-#macro __CHATTERBOX_DEBUG_SPLITTER  true
-#macro __CHATTERBOX_DEBUG_COMPILER  true
-#macro __CHATTERBOX_DEBUG_VM        true
+#macro __CHATTERBOX_DEBUG_INIT      false
+#macro __CHATTERBOX_DEBUG_LOADER    false
+#macro __CHATTERBOX_DEBUG_SPLITTER  false
+#macro __CHATTERBOX_DEBUG_COMPILER  false
+#macro __CHATTERBOX_DEBUG_VM        false
 
 //These macros control which delimiters to use for <<actions>>
 //You probably don't want to change these

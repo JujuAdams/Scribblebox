@@ -210,7 +210,7 @@
     {"resourceType":"GMFolder","resourceVersion":"1.0","name":"Miscellaneous","folderPath":"folders/Scribble/Miscellaneous.yy","order":5,},
     {"resourceType":"GMFolder","resourceVersion":"1.0","name":"Quick Functions","folderPath":"folders/Scribble/Quick Functions.yy","order":6,},
     {"resourceType":"GMFolder","resourceVersion":"1.0","name":"Superfonts","folderPath":"folders/Scribble/Superfonts.yy","order":7,},
-    {"resourceType":"GMFolder","resourceVersion":"1.0","name":"Chatterbox","folderPath":"folders/Chatterbox.yy","order":8,},
+    {"resourceType":"GMFolder","resourceVersion":"1.0","name":"Chatterbox","folderPath":"folders/Chatterbox.yy","order":6,},
     {"resourceType":"GMFolder","resourceVersion":"1.0","name":"(System) (Don't look in here)","folderPath":"folders/Chatterbox/(System) (Don't look in here).yy","order":1,},
     {"resourceType":"GMFolder","resourceVersion":"1.0","name":"omg i can't believe you looked in here","folderPath":"folders/Chatterbox/(System) (Don't look in here)/omg i can't believe you looked in here.yy","order":1,},
     {"resourceType":"GMFolder","resourceVersion":"1.0","name":"Chatterboxes","folderPath":"folders/Chatterbox/Chatterboxes.yy","order":2,},

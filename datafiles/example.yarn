@@ -22,8 +22,8 @@ Lemme open up the GitHub repos for them.
 Uh, if you're ok with that?
 -> Sure, go right ahead.
 	Okey dokey, let me know when you come back...
-	<<url_open "https://github.com/JujuAdams/scribble">>
-	<<url_open "https://github.com/JujuAdams/chatterbox">>
+	<<url_open("https://github.com/JujuAdams/scribble")>>
+	<<url_open("https://github.com/JujuAdams/chatterbox")>>
 	<<wait>>
 	Pretty cool huh?
 	Wouldn't it be great if you could put them together?
@@ -65,16 +65,16 @@ Take a browse through the code. It's all commented and should be easy to follow.
 	Sure, one sec...
 	<<jump TheBasicIdea>>
 -> Oooh I'd like to read about Scribble please.
-	<<url_open "https://github.com/JujuAdams/scribble">>
+	<<url_open("https://github.com/JujuAdams/scribble")>>
 	[$FFFF90]Chatterbox[/c] too?
 	-> Yep.
-            <<url_open "https://github.com/JujuAdams/chatterbox">>
+            <<url_open("https://github.com/JujuAdams/chatterbox")>>
 	-> Nah, already know that library.
 -> Hmm, not so familiar with Chatterbox... Could you point me in the right direction?
-	<<url_open "https://github.com/JujuAdams/chatterbox">>
+	<<url_open("https://github.com/JujuAdams/chatterbox")>>
 	[$FFFF90]Scribble[/c] too?
 	-> Please.
-		<<url_open "https://github.com/JujuAdams/scribble">>
+		<<url_open("https://github.com/JujuAdams/scribble")>>
 	-> No thanks.
 -> Cool! That's all I think. Thanks for your time.
 I guess that's everything then...

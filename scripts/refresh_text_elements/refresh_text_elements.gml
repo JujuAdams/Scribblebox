@@ -2,7 +2,7 @@ function refresh_text_elements()
 {
     text_elements = [];
     
-    //Set all the Scribble t
+    //Set all the Scribble text we're going to cache to wrap
     var _x = 100;
     var _y = 100;
     
@@ -32,7 +32,7 @@ function refresh_text_elements()
         ++_i;
     }
     
-    //Ident our options slightly
+    //Indent our options slightly
     _x += 30;
     
     //Space out the options from the content a little too
